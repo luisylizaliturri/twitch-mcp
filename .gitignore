@@ -1,0 +1,5 @@
+context
+node_modules
+
+mcp_config_copy.json
+.env
