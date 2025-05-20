@@ -1,8 +1,16 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getCurrentUser, getStreams, getUserByLogin, getTopGames, updateChannelInfo } from "../api/twitch.js";
+import {
+  getCurrentUser,
+  getStreams,
+  getUserByLogin,
+  getTopGames,
+  updateChannelInfo,
+  searchChannels,
+} from "../api/twitch.js";
 
-// Format user info
+///// Formatting functions /////
+
 function formatUserInfo(user: any): string {
   return [
     `Username: ${user.display_name} (${user.login})`,
@@ -18,7 +26,6 @@ function formatUserInfo(user: any): string {
     .join("\n");
 }
 
-// Format stream info
 function formatStreamInfo(stream: any): string {
   return [
     `Channel: ${stream.user_name} (${stream.user_login})`,
@@ -32,7 +39,6 @@ function formatStreamInfo(stream: any): string {
   ].join("\n");
 }
 
-// Format game info
 function formatGameInfo(game: any): string {
   return [
     `Game: ${game.name}`,
@@ -43,7 +49,19 @@ function formatGameInfo(game: any): string {
   ].join("\n");
 }
 
-// Register Twitch-related tools
+function formatChannelInfo(channel: any): string {
+  return [
+    `Channel: ${channel.display_name} (${channel.broadcaster_login})`,
+    `ID: ${channel.broadcaster_id}`,
+    `Started: ${new Date(channel.started_at).toLocaleString()}`,
+    `${channel.is_live ? "Live" : "Offline"}`,
+    `URL: https://twitch.tv/${channel.broadcaster_login}`,
+    "---",
+  ].join("\n");
+}
+
+///// Twitch tools /////
+
 export function registerTwitchTools(server: McpServer): void {
   server.tool(
     "get-current-user",
@@ -132,7 +150,11 @@ export function registerTwitchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Failed to retrieve streams data: params ${JSON.stringify({ gameId, userLogin, limit })}`,
+              text: `Failed to retrieve streams data: params ${JSON.stringify({
+                gameId,
+                userLogin,
+                limit,
+              })}`,
             },
           ],
         };
@@ -174,8 +196,14 @@ export function registerTwitchTools(server: McpServer): void {
         .max(100)
         .optional()
         .describe("Number of results to return (1-100)"),
-      after: z.string().optional().describe("Cursor for pagination (get next page)"),
-      before: z.string().optional().describe("Cursor for pagination (get previous page)"),
+      after: z
+        .string()
+        .optional()
+        .describe("Cursor for pagination (get next page)"),
+      before: z
+        .string()
+        .optional()
+        .describe("Cursor for pagination (get previous page)"),
     },
     async ({ limit = 20, after, before }) => {
       const gamesData = await getTopGames({ limit, after, before });
@@ -185,7 +213,9 @@ export function registerTwitchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Failed to retrieve top games data: params ${JSON.stringify({ limit, after, before })}`,
+              text: `Failed to retrieve top games data: params ${JSON.stringify(
+                { limit, after, before }
+              )}`,
             },
           ],
         };
@@ -203,15 +233,17 @@ export function registerTwitchTools(server: McpServer): void {
       }
 
       const gamesInfo = gamesData.data.map(formatGameInfo);
-      const paginationInfo = gamesData.pagination.cursor 
-        ? `\n\nPagination cursor: ${gamesData.pagination.cursor}` 
+      const paginationInfo = gamesData.pagination.cursor
+        ? `\n\nPagination cursor: ${gamesData.pagination.cursor}`
         : "";
 
       return {
         content: [
           {
             type: "text",
-            text: `Top ${gamesData.data.length} games on Twitch:\n\n${gamesInfo.join("\n")}${paginationInfo}`,
+            text: `Top ${
+              gamesData.data.length
+            } games on Twitch:\n\n${gamesInfo.join("\n")}${paginationInfo}`,
           },
         ],
       };
@@ -222,39 +254,69 @@ export function registerTwitchTools(server: McpServer): void {
     "update-channel",
     "Update a Twitch channel's information (title, game, language, etc.)",
     {
-      broadcaster_id: z.string().describe("The ID of the broadcaster whose channel to update"),
-      game_id: z.string().optional().describe("The ID of the game to set. Use '0' or empty string to unset"),
-      broadcaster_language: z.string().optional().describe("The broadcaster's language as an ISO 639-1 code (e.g. 'en')"),
+      broadcaster_id: z
+        .string()
+        .describe("The ID of the broadcaster whose channel to update"),
+      game_id: z
+        .string()
+        .optional()
+        .describe(
+          "The ID of the game to set. Use '0' or empty string to unset"
+        ),
+      broadcaster_language: z
+        .string()
+        .optional()
+        .describe(
+          "The broadcaster's language as an ISO 639-1 code (e.g. 'en')"
+        ),
       title: z.string().optional().describe("The title of the stream"),
-      delay: z.number().optional().describe("Broadcast delay in seconds (Partner only, max 900)"),
-      tags: z.array(z.string()).optional().describe("List of tags to apply to the channel"),
-      content_classification_labels: z.array(
-        z.object({
-          id: z.string().describe("ID of the Content Classification Label"),
-          is_enabled: z.boolean().describe("Whether the label should be enabled")
-        })
-      ).optional().describe("List of content classification labels to apply"),
-      is_branded_content: z.boolean().optional().describe("Flag indicating if the channel has branded content")
+      delay: z
+        .number()
+        .optional()
+        .describe("Broadcast delay in seconds (Partner only, max 900)"),
+      tags: z
+        .array(z.string())
+        .optional()
+        .describe("List of tags to apply to the channel"),
+      content_classification_labels: z
+        .array(
+          z.object({
+            id: z.string().describe("ID of the Content Classification Label"),
+            is_enabled: z
+              .boolean()
+              .describe("Whether the label should be enabled"),
+          })
+        )
+        .optional()
+        .describe("List of content classification labels to apply"),
+      is_branded_content: z
+        .boolean()
+        .optional()
+        .describe("Flag indicating if the channel has branded content"),
     },
-    async ({ 
-      broadcaster_id, 
-      game_id, 
-      broadcaster_language, 
-      title, 
-      delay, 
+    async ({
+      broadcaster_id,
+      game_id,
+      broadcaster_language,
+      title,
+      delay,
       tags,
       content_classification_labels,
-      is_branded_content
+      is_branded_content,
     }) => {
       // Build the request object with only defined fields
       const channelInfo: any = {};
       if (game_id !== undefined) channelInfo.game_id = game_id;
-      if (broadcaster_language !== undefined) channelInfo.broadcaster_language = broadcaster_language;
+      if (broadcaster_language !== undefined)
+        channelInfo.broadcaster_language = broadcaster_language;
       if (title !== undefined) channelInfo.title = title;
       if (delay !== undefined) channelInfo.delay = delay;
       if (tags !== undefined) channelInfo.tags = tags;
-      if (content_classification_labels !== undefined) channelInfo.content_classification_labels = content_classification_labels;
-      if (is_branded_content !== undefined) channelInfo.is_branded_content = is_branded_content;
+      if (content_classification_labels !== undefined)
+        channelInfo.content_classification_labels =
+          content_classification_labels;
+      if (is_branded_content !== undefined)
+        channelInfo.is_branded_content = is_branded_content;
 
       // Ensure at least one field is being updated
       if (Object.keys(channelInfo).length === 0) {
@@ -262,9 +324,9 @@ export function registerTwitchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: "At least one channel property must be provided to update"
-            }
-          ]
+              text: "At least one channel property must be provided to update",
+            },
+          ],
         };
       }
 
@@ -275,20 +337,80 @@ export function registerTwitchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: "Channel information updated successfully"
-            }
-          ]
+              text: "Channel information updated successfully",
+            },
+          ],
         };
       } else {
         return {
           content: [
             {
               type: "text",
-              text: "Failed to update channel information. Please check that you have the required permissions and all parameters are valid."
-            }
-          ]
+              text: "Failed to update channel information. Please check that you have the required permissions and all parameters are valid.",
+            },
+          ],
         };
       }
+    }
+  );
+
+  server.tool(
+    "search-channels",
+    "Search for Twitch channels by name",
+    {
+      query: z.string().describe("The search query"),
+      live_only: z.boolean().describe("Filter results to live channels only"),
+      first: z
+        .number()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe("Number of results to return (1-100)"),
+      after: z
+        .string()
+        .optional()
+        .describe("Cursor for pagination (get next page)"),
+    },
+    async ({ query, live_only, first = 20, after }) => {
+      const channelsData = await searchChannels({ query, live_only, first, after});
+  
+      if (!channelsData) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Failed to retrieve channels data: params ${JSON.stringify({ query, live_only, first, after })}`,
+            },
+          ],
+        };
+      }
+
+      if (channelsData.data.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "No channels found matching the criteria",
+            },
+          ],
+        };
+      }
+
+      const channelsInfo = channelsData.data.map(formatChannelInfo);
+      const paginationInfo = channelsData.pagination.cursor
+        ? `\n\nPagination cursor: ${channelsData.pagination.cursor}`
+        : "";
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Found ${
+              channelsData.data.length
+            } channels:\n\n${channelsInfo.join("\n")}${paginationInfo}`,
+          },
+        ],
+      };
     }
   );
 }

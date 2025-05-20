@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 // Find the project root directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
+const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
 // API endpoints and URLs
 export const TWITCH_API_BASE = "https://api.twitch.tv/helix";
 export const TWITCH_AUTH_URL = "https://id.twitch.tv/oauth2";
@@ -14,16 +14,17 @@ export const TOKEN_FILE = path.join(PROJECT_ROOT, "tokens.json");
 export const AUTH_PORT = 3000;
 // Authentication scopes required to access certain twitch api endpoints
 export const AUTH_SCOPES = [
-    'user:read:email',
-    'channel:read:subscriptions',
-    'user:read:follows',
-    'channel:read:stream_key',
-    'channel:manage:broadcast'
+    "user:read:email",
+    "channel:read:subscriptions",
+    "user:read:follows",
+    "channel:read:stream_key",
+    "channel:manage:broadcast",
+    "user:write:chat",
 ];
 //Twitch API credentials
 //These are set by the user in the mcp config file
-export let TWITCH_CLIENT_ID = '';
-export let TWITCH_CLIENT_SECRET = '';
+export let TWITCH_CLIENT_ID = ""; //placeholder
+export let TWITCH_CLIENT_SECRET = ""; //placeholder
 //Save user credentials for global use
 export function initializeCredentials(clientId, clientSecret) {
     TWITCH_CLIENT_ID = clientId;

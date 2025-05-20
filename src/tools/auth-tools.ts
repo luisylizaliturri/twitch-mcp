@@ -11,14 +11,14 @@ export function registerAuthTools(server: McpServer): void {
     async () => {
       await ensureValidToken();
       const accessToken = getAccessToken();
-      
+
       return {
         content: [
           {
             type: "text",
-            text: accessToken 
-              ? "Successfully authenticated with Twitch!" 
-              : "Authentication failed. Please check the console output for instructions."
+            text: accessToken
+              ? "Successfully authenticated with Twitch!"
+              : "Authentication failed. Please check the console output for instructions.",
           },
         ],
       };
@@ -33,18 +33,20 @@ export function registerAuthTools(server: McpServer): void {
       const accessToken = getAccessToken();
       const tokenExpiresAt = getTokenExpiresAt();
       const isValid = accessToken && tokenExpiresAt > Date.now();
-      const expiresIn = isValid ? Math.floor((tokenExpiresAt - Date.now()) / 1000 / 60) : 0;
-      
+      const expiresIn = isValid
+        ? Math.floor((tokenExpiresAt - Date.now()) / 1000 / 60)
+        : 0;
+
       return {
         content: [
           {
             type: "text",
             text: isValid
               ? `Authenticated with Twitch. Token expires in approximately ${expiresIn} minutes.`
-              : "Not authenticated with Twitch."
+              : "Not authenticated with Twitch.",
           },
         ],
       };
     }
   );
-} 
+}

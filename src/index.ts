@@ -35,7 +35,7 @@ registerTwitchTools(server);
 
 async function main() {
   console.error("Initializing Twitch MCP Server...");
-  
+
   // Check for existing tokens first
   const hasValidToken = loadTokens();
   if (!hasValidToken) {
@@ -44,18 +44,11 @@ async function main() {
   } else {
     console.error("Loaded existing access token");
   }
-  
+
   // Connect to stdio transport
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Twitch MCP Server running on stdio");
-  
-  // if (isRunningInMcpServer && !hasValidToken) {
-  //   console.error("\n=== IMPORTANT: Running in MCP Server environment ===");
-  //   console.error("To authenticate, use the 'authenticate' tool from Claude's interface");
-  //   console.error("Then follow the manual authentication instructions in the console");
-  //   console.error("============================================\n");
-  // }
 }
 
 main().catch((error) => {

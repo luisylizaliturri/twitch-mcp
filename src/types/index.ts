@@ -44,6 +44,54 @@ export interface TwitchGame {
   igdb_id: string;
 }
 
+export interface TwitchChannel {
+  broadcaster_id: string;
+  broadcaster_login: string;
+  display_name: string;
+  game_id: string; 
+  game_name: string; 
+  id: string;
+  is_live: boolean;
+  tag_ids: string[];
+  thumbnail_url: string; 
+  title: string; 
+  started_at: string;
+}
+
+
+export interface TwitchChatMessageResponse {
+  message_id: string, 
+  is_sent: boolean, 
+  drop_reason: string, 
+  code: string, 
+  message: string, 
+}
+
+
+///// Request types //////
+
+export interface UpdateChannelRequest {
+  game_id?: string;
+  broadcaster_language?: string;
+  title?: string;
+  delay?: number;
+  tags?: string[];
+  content_classification_labels?: ContentClassificationLabel[];
+  is_branded_content?: boolean;
+}
+
+
+export interface ContentClassificationLabel {
+  id: string;
+  is_enabled: boolean;
+}
+
+
+
+
+
+
+///// Response types //////
 export interface UsersResponse {
   data: TwitchUser[];
 }
@@ -62,17 +110,13 @@ export interface TopGamesResponse {
   };
 }
 
-export interface ContentClassificationLabel {
-  id: string;
-  is_enabled: boolean;
+export interface SearchChannelsResponse {
+  data: TwitchChannel[];
+  pagination: {
+    cursor?: string;
+  };
 }
 
-export interface UpdateChannelRequest {
-  game_id?: string;
-  broadcaster_language?: string;
-  title?: string;
-  delay?: number;
-  tags?: string[];
-  content_classification_labels?: ContentClassificationLabel[];
-  is_branded_content?: boolean;
+export interface SendChatMessageResponse {
+  data: TwitchChatMessageResponse[];
 }

@@ -42,12 +42,6 @@ async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error("Twitch MCP Server running on stdio");
-    // if (isRunningInMcpServer && !hasValidToken) {
-    //   console.error("\n=== IMPORTANT: Running in MCP Server environment ===");
-    //   console.error("To authenticate, use the 'authenticate' tool from Claude's interface");
-    //   console.error("Then follow the manual authentication instructions in the console");
-    //   console.error("============================================\n");
-    // }
 }
 main().catch((error) => {
     console.error("Fatal error in main():", error);
