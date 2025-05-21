@@ -135,7 +135,6 @@ export async function sendChatMessage(options) {
     if (!(await ensureValidToken())) {
         throw new Error("Failed to obtain a valid access token");
     }
-    const accessToken = getAccessToken();
     const url = new URL(`${TWITCH_API_BASE}/chat/messages`);
     const { broadcaster_id, sender_id, message, reply_parent_message_id } = options;
     url.searchParams.append("broadcaster_id", broadcaster_id);

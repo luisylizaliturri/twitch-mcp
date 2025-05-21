@@ -7,6 +7,7 @@ import {
   getTopGames,
   updateChannelInfo,
   searchChannels,
+  sendChatMessage,
 } from "../api/twitch.js";
 
 ///// Formatting functions /////
@@ -408,6 +409,34 @@ export function registerTwitchTools(server: McpServer): void {
             text: `Found ${
               channelsData.data.length
             } channels:\n\n${channelsInfo.join("\n")}${paginationInfo}`,
+          },
+        ],
+      };
+    }
+  );
+
+  server.tool(
+    "send-chat-message",
+    "Send a chat message to a Twitch channel",
+    {
+      broadcaster_id: z.string().describe("The ID of the broadcaster"),
+      sender_id: z.string().describe("The ID of the sender"),
+      message: z.string().describe("The message to send"),
+      reply_parent_message_id: z.string().optional().describe("The ID of the parent message to reply to"),
+    },
+    async ({ broadcaster_id, sender_id, message, reply_parent_message_id }) => {
+      const response = await sendChatMessage({
+        broadcaster_id,
+        sender_id,
+        message,
+        reply_parent_message_id,
+      });
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Chat message sent successfully",
           },
         ],
       };
