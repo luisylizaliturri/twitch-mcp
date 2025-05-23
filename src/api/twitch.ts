@@ -39,6 +39,8 @@ export async function makeTwitchRequest<T>(
   }
 
   const accessToken = getAccessToken();
+  //debug
+  console.error("makeTwitchRequest accessToken", accessToken);
 
   try {
     const headers = {

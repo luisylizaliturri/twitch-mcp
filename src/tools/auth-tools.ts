@@ -32,6 +32,10 @@ export function registerAuthTools(server: McpServer): void {
     async () => {
       const accessToken = getAccessToken();
       const tokenExpiresAt = getTokenExpiresAt();
+
+      //debug
+      console.error("auth-status accessToken", accessToken);
+      console.error("auth-status tokenExpiresAt", tokenExpiresAt);
       const isValid = accessToken && tokenExpiresAt > Date.now();
       const expiresIn = isValid
         ? Math.floor((tokenExpiresAt - Date.now()) / 1000 / 60)
