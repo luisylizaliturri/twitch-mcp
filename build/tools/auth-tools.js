@@ -19,6 +19,9 @@ export function registerAuthTools(server) {
     server.tool("auth-status", "Check authentication status with Twitch", {}, async () => {
         const accessToken = getAccessToken();
         const tokenExpiresAt = getTokenExpiresAt();
+        //debug
+        console.error("auth-status accessToken", accessToken);
+        console.error("auth-status tokenExpiresAt", tokenExpiresAt);
         const isValid = accessToken && tokenExpiresAt > Date.now();
         const expiresIn = isValid
             ? Math.floor((tokenExpiresAt - Date.now()) / 1000 / 60)
@@ -28,7 +31,7 @@ export function registerAuthTools(server) {
                 {
                     type: "text",
                     text: isValid
-                        ? `Authenticated with Twitch. Token expires in approximately ${expiresIn} minutes.`
+                        ? `Authenticated with Twitch. Token ${accessToken} expires in approximately ${expiresIn} minutes.`
                         : "Not authenticated with Twitch.",
                 },
             ],

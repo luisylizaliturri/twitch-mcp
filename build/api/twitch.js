@@ -10,6 +10,8 @@ export async function makeTwitchRequest(url, queryParams = {}, body = {}, method
         throw new Error("Failed to obtain a valid access token");
     }
     const accessToken = getAccessToken();
+    //debug
+    console.error("makeTwitchRequest accessToken", accessToken);
     try {
         const headers = {
             Authorization: `Bearer ${accessToken}`,
