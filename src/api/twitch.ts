@@ -5,7 +5,12 @@ import {
   TopGamesResponse,
   UpdateChannelRequest,
   SearchChannelsResponse,
-  SendChatMessageResponse,
+  //SendChatMessageResponse,
+  TwitchPoll,
+  TwitchChatMessage,
+  GetPollResponse,
+  // TwitchPollResponse,
+  // CreatePollResponse,
 } from "../types/index.js";
 import { ensureValidToken } from "../auth/oauth.js";
 import { getAccessToken } from "../auth/token-manager.js";
@@ -58,7 +63,6 @@ export async function makeTwitchRequest<T>(
         break;
       case HttpMethods.POST:
         // Add body
-        url.searchParams.append("body", JSON.stringify(body));
         response = await fetch(url.toString(), {
           method: "POST",
           headers,
@@ -66,7 +70,6 @@ export async function makeTwitchRequest<T>(
         });
         break;
       case HttpMethods.PATCH:
-        url.searchParams.append("body", JSON.stringify(body));
         response = await fetch(url.toString(), {
           method: "PATCH",
           headers,
@@ -74,7 +77,6 @@ export async function makeTwitchRequest<T>(
         });
         break;
       case HttpMethods.PUT:
-        url.searchParams.append("body", JSON.stringify(body));
         response = await fetch(url.toString(), {
           method: "PUT",
           headers,
@@ -89,8 +91,16 @@ export async function makeTwitchRequest<T>(
         break;
     }
 
+    console.error("response", response);
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error(`HTTP error! status: ${response.status}`);
+      return false as T;
+    }
+
+    if (response.status === 400) {
+      console.error("Bad Request");
+      return false as T;
     }
 
     return (await response.json()) as T;
@@ -182,14 +192,13 @@ export async function updateChannelInfo(
   url.searchParams.append("broadcaster_id", broadcasterId);
 
   try {
-    return (
-      makeTwitchRequest<UpdateChannelRequest>(
-        url,
-        {},
-        channelInfo,
-        HttpMethods.PATCH
-      ) !== null
+    const result = await makeTwitchRequest<boolean>(
+      url,
+      {},
+      channelInfo,
+      HttpMethods.PATCH
     );
+    return result === null ? false : result;
   } catch (error) {
     console.error("Error updating channel information:", error);
     return false;
@@ -212,7 +221,72 @@ export async function searchChannels(options: {
 
   const url = new URL(`${TWITCH_API_BASE}/search/channels`);
 
-  return makeTwitchRequest<SearchChannelsResponse>(
+  try {
+    return makeTwitchRequest<SearchChannelsResponse>(
+      url,
+      queryParams,
+      {},
+      HttpMethods.GET
+    );
+  } catch (error) {
+    console.error("Error searching channels:", error);
+    return null;
+  }
+}
+
+export async function sendChatMessage(
+  twitchChatMessage: TwitchChatMessage
+): Promise<boolean> {
+  const url = new URL(`${TWITCH_API_BASE}/chat/messages`);
+
+  try {
+    const result = await makeTwitchRequest<boolean>(
+      url,
+      {},
+      twitchChatMessage,
+      HttpMethods.POST
+    );
+    return result === null ? false : result;
+  } catch (error) {
+    console.error("Error sending chat message:", error);
+    return false;
+  }
+}
+
+//Needs to be twitch affiliate
+export async function createPoll(twitchPoll: TwitchPoll): Promise<boolean> {
+  const url = new URL(`${TWITCH_API_BASE}/polls`);
+
+  try {
+    const result = await makeTwitchRequest<boolean>(
+      url,
+      {},
+      twitchPoll,
+      HttpMethods.POST
+    );
+    return result === null ? false : result;
+  } catch (error) {
+    console.error("Error creating poll:", error);
+    return false;
+  }
+}
+
+export async function getPoll(options: {
+  broadcaster_id: string;
+  id: string;
+  first: number;
+  after?: string;
+}): Promise<GetPollResponse | null> {
+  const { broadcaster_id, id, first = 20, after } = options;
+  const queryParams: Record<string, string> = {
+    broadcaster_id,
+    id,
+    first: first.toString(),
+    after: after || "",
+  };
+
+  const url = new URL(`${TWITCH_API_BASE}/polls`);
+  return makeTwitchRequest<GetPollResponse>(
     url,
     queryParams,
     {},
@@ -220,41 +294,23 @@ export async function searchChannels(options: {
   );
 }
 
-export async function sendChatMessage(options: {
+export async function endPoll(poll: {
   broadcaster_id: string;
-  sender_id: string;
-  message: string;
-  reply_parent_message_id?: string;
+  id: string;
+  status: string;
 }): Promise<boolean> {
-  // Ensure we have a valid token
-  if (!(await ensureValidToken())) {
-    throw new Error("Failed to obtain a valid access token");
-  }
-
-  const url = new URL(`${TWITCH_API_BASE}/chat/messages`);
-
-  const { broadcaster_id, sender_id, message, reply_parent_message_id } =
-    options;
-
-  url.searchParams.append("broadcaster_id", broadcaster_id);
-  url.searchParams.append("sender_id", sender_id);
-  url.searchParams.append("message", message);
-
-  if (reply_parent_message_id) {
-    url.searchParams.append("reply_parent_message_id", reply_parent_message_id);
-  }
+  const url = new URL(`${TWITCH_API_BASE}/polls`);
 
   try {
-    return (
-      makeTwitchRequest<SendChatMessageResponse>(
-        url,
-        {},
-        {},
-        HttpMethods.POST
-      ) !== null
+    const result = await makeTwitchRequest<boolean>(
+      url,
+      {},
+      poll,
+      HttpMethods.PATCH
     );
+    return result === null ? false : result;
   } catch (error) {
-    console.error("Error sending chat message:", error);
+    console.error("Error ending poll:", error);
     return false;
   }
 }

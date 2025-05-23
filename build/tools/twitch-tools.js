@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getCurrentUser, getStreams, getUserByLogin, getTopGames, updateChannelInfo, searchChannels, sendChatMessage, } from "../api/twitch.js";
+import { getCurrentUser, getStreams, getUserByLogin, getTopGames, updateChannelInfo, searchChannels, sendChatMessage, createPoll, endPoll, getPoll, } from "../api/twitch.js";
 ///// Formatting functions /////
 function formatUserInfo(user) {
     return [
@@ -45,6 +45,9 @@ function formatChannelInfo(channel) {
         `URL: https://twitch.tv/${channel.broadcaster_login}`,
         "---",
     ].join("\n");
+}
+function formatPollInfo(poll) {
+    return "";
 }
 ///// Twitch tools /////
 export function registerTwitchTools(server) {
@@ -290,13 +293,23 @@ export function registerTwitchTools(server) {
             .optional()
             .describe("Cursor for pagination (get next page)"),
     }, async ({ query, live_only, first = 20, after }) => {
-        const channelsData = await searchChannels({ query, live_only, first, after });
+        const channelsData = await searchChannels({
+            query,
+            live_only,
+            first,
+            after,
+        });
         if (!channelsData) {
             return {
                 content: [
                     {
                         type: "text",
-                        text: `Failed to retrieve channels data: params ${JSON.stringify({ query, live_only, first, after })}`,
+                        text: `Failed to retrieve channels data: params ${JSON.stringify({
+                            query,
+                            live_only,
+                            first,
+                            after,
+                        })}`,
                     },
                 ],
             };
@@ -328,7 +341,10 @@ export function registerTwitchTools(server) {
         broadcaster_id: z.string().describe("The ID of the broadcaster"),
         sender_id: z.string().describe("The ID of the sender"),
         message: z.string().describe("The message to send"),
-        reply_parent_message_id: z.string().optional().describe("The ID of the parent message to reply to"),
+        reply_parent_message_id: z
+            .string()
+            .optional()
+            .describe("The ID of the parent message to reply to"),
     }, async ({ broadcaster_id, sender_id, message, reply_parent_message_id }) => {
         const response = await sendChatMessage({
             broadcaster_id,
@@ -336,6 +352,16 @@ export function registerTwitchTools(server) {
             message,
             reply_parent_message_id,
         });
+        if (!response) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "Failed to send chat message",
+                    },
+                ],
+            };
+        }
         return {
             content: [
                 {
@@ -343,6 +369,100 @@ export function registerTwitchTools(server) {
                     text: "Chat message sent successfully",
                 },
             ],
+        };
+    });
+    server.tool("create-poll", "Create a poll for a Twitch channel", {
+        broadcaster_id: z.string().describe("The ID of the broadcaster"),
+        title: z.string().describe("The title of the poll"),
+        choices: z.array(z.string()).describe("The choices of the poll"),
+        duration: z.number().describe("The duration of the poll in seconds"),
+    }, async ({ broadcaster_id, title, choices, duration }) => {
+        const response = await createPoll({
+            broadcaster_id,
+            title,
+            choices,
+            duration,
+        });
+        if (!response) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "Failed to create poll",
+                    },
+                ],
+            };
+        }
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: "Poll created successfully",
+                },
+            ],
+        };
+    });
+    server.tool("get-poll", "Get a poll for a Twitch channel", {
+        broadcaster_id: z.string().describe("The ID of the broadcaster"),
+        id: z.string().optional().describe("The ID of the poll to get"),
+        first: z
+            .number()
+            .min(1)
+            .max(100)
+            .optional()
+            .describe("Number of results to return (1-100)"),
+        after: z
+            .string()
+            .optional()
+            .describe("Cursor for pagination (get next page)"),
+    }, async ({ broadcaster_id, id, first = 20, after }) => {
+        const pollData = await getPoll({
+            broadcaster_id,
+            id: id || "",
+            first,
+            after,
+        });
+        if (!pollData) {
+            return {
+                content: [{ type: "text", text: "Failed to get poll" }],
+            };
+        }
+        if (pollData.data.length === 0) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "No polls found matching the criteria",
+                    },
+                ],
+            };
+        }
+        const pollInfo = pollData.data.map(formatPollInfo);
+        const paginationInfo = pollData.pagination.cursor
+            ? `\n\nPagination cursor: ${pollData.pagination.cursor}`
+            : "";
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Found ${pollData.data.length} polls:\n\n${pollInfo.join("\n")}${paginationInfo}`,
+                },
+            ],
+        };
+    });
+    server.tool("end-poll", "End a poll for a Twitch channel", {
+        broadcaster_id: z.string().describe("The ID of the broadcaster"),
+        id: z.string().describe("The ID of the poll to end"),
+        status: z.string().describe("The status of the poll to end"),
+    }, async ({ broadcaster_id, id, status }) => {
+        const response = await endPoll({ broadcaster_id, id, status });
+        if (!response) {
+            return {
+                content: [{ type: "text", text: "Failed to end poll" }],
+            };
+        }
+        return {
+            content: [{ type: "text", text: "Poll ended successfully" }],
         };
     });
 }

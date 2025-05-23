@@ -5,7 +5,6 @@ export interface TokenData {
   expires_at: number;
 }
 
-// Twitch API response types
 export interface TwitchUser {
   id: string;
   login: string;
@@ -58,18 +57,7 @@ export interface TwitchChannel {
   started_at: string;
 }
 
-
-export interface TwitchChatMessageResponse {
-  message_id: string, 
-  is_sent: boolean, 
-  drop_reason: string, 
-  code: string, 
-  message: string, 
-}
-
-
 ///// Request types //////
-
 export interface UpdateChannelRequest {
   game_id?: string;
   broadcaster_language?: string;
@@ -80,16 +68,24 @@ export interface UpdateChannelRequest {
   is_branded_content?: boolean;
 }
 
-
 export interface ContentClassificationLabel {
   id: string;
   is_enabled: boolean;
 }
 
+export interface TwitchChatMessage {
+  broadcaster_id: string;
+  sender_id: string;
+  message: string;
+  reply_parent_message_id?: string;
+}
 
-
-
-
+export interface TwitchPoll {
+  broadcaster_id: string;
+  title: string;
+  choices: string[]; //choice titles
+  duration: number; //duration in seconds
+}
 
 ///// Response types //////
 export interface UsersResponse {
@@ -117,6 +113,19 @@ export interface SearchChannelsResponse {
   };
 }
 
-export interface SendChatMessageResponse {
-  data: TwitchChatMessageResponse[];
+export interface TwitchPollResponse {
+  id: string;
+  title: string;
+  choices: {id: string, title: string, votess: number}
+  status: string, 
+  duration: number, 
+  started_at: string;
+  ended_at: string;
+}
+
+export interface GetPollResponse {
+  data: TwitchPollResponse[];
+  pagination: {
+    cursor?: string;
+  };
 }
