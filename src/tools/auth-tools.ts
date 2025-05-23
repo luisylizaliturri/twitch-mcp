@@ -46,7 +46,7 @@ export function registerAuthTools(server: McpServer): void {
           {
             type: "text",
             text: isValid
-              ? `Authenticated with Twitch. Token expires in approximately ${expiresIn} minutes.`
+              ? `Authenticated with Twitch. Token ${accessToken} expires in approximately ${expiresIn} minutes.`
               : "Not authenticated with Twitch.",
           },
         ],
