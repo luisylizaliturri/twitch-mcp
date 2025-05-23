@@ -6,52 +6,36 @@ import { ensureValidToken } from "./auth/oauth.js";
 import { registerAuthTools } from "./tools/auth-tools.js";
 import { registerTwitchTools } from "./tools/twitch-tools.js";
 
-// Check for client credentials in command line arguments
-const clientId = process.argv[2];
-const clientSecret = process.argv[3];
+// src/index.ts  (or index.js)
+export async function startTwitchServer({
+  clientId,
+  clientSecret,
+}: {
+  clientId: string;
+  clientSecret: string;
+}) {
+  if (!clientId || !clientSecret) throw new Error("clientId and clientSecret required");
 
-if (!clientId || !clientSecret) {
-  console.error("Error: Client ID and Secret are required");
-  console.error("Usage: node dist/index.js <client_id> <client_secret>");
-  process.exit(1);
-}
+  initializeCredentials(clientId, clientSecret);
 
-// Initialize the credentials in constants.ts
-initializeCredentials(clientId, clientSecret);
+  const server = new McpServer({
+    name: "twitch_mcp",
+    version: "1.0.0",
+    capabilities: { resources: {}, tools: {} },
+  });
 
-// Create server instance
-const server = new McpServer({
-  name: "twitch_mcp",
-  version: "1.0.0",
-  capabilities: {
-    resources: {},
-    tools: {},
-  },
-});
+  registerAuthTools(server);
+  registerTwitchTools(server);
 
-// Register MCP tools
-registerAuthTools(server);
-registerTwitchTools(server);
-
-async function main() {
-  console.error("Initializing Twitch MCP Server...");
-
-  // Check for existing tokens first
-  const hasValidToken = loadTokens();
-  if (!hasValidToken) {
-    console.error("No valid tokens found, initiating authorization flow...");
+  console.error("Initializing Twitch MCP Server…");
+  if (!loadTokens()) {
+    console.error("No valid tokens found → starting OAuth flow");
     await ensureValidToken();
   } else {
     console.error("Loaded existing access token");
   }
 
-  // Connect to stdio transport
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Twitch MCP Server running on stdio");
 }
-
-main().catch((error) => {
-  console.error("Fatal error in main():", error);
-  process.exit(1);
-});
