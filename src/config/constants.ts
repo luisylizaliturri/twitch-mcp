@@ -1,12 +1,9 @@
 import path from "path";
-import { fileURLToPath } from "url";
+import os from "os";
+import fs from "fs";
 
-// Find the project root directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
 
-// Server configuration
+const HOME_DIR = os.homedir();
 export const AUTH_PORT = 8787;
 
 // API endpoints and URLs
@@ -15,9 +12,12 @@ export const TWITCH_AUTH_URL = "https://id.twitch.tv/oauth2";
 export const REDIRECT_URI = `http://localhost:${AUTH_PORT}/callback`;
 
 // File paths
-export const TOKEN_FILE = path.join(PROJECT_ROOT, "tokens.json");
-
-
+const TWITCH_MCP_DIR = path.join(HOME_DIR, ".twitch_mcp");
+// Create the directory if it doesn't exist
+if (!fs.existsSync(TWITCH_MCP_DIR)) {
+  fs.mkdirSync(TWITCH_MCP_DIR, { recursive: true });
+}
+export const TOKEN_FILE = path.join(TWITCH_MCP_DIR, "tokens.json");
 
 // Authentication scopes required to access certain twitch api endpoints
 export const AUTH_SCOPES = [
@@ -29,19 +29,3 @@ export const AUTH_SCOPES = [
   "user:write:chat",
   "channel:manage:polls",
 ];
-
-//Twitch API credentials
-//These are set by the user in the mcp config file
-export let TWITCH_CLIENT_ID: string = ""; //placeholder
-export let TWITCH_CLIENT_SECRET: string = ""; //placeholder
-
-//Save user credentials for global use
-export function initializeCredentials(
-  clientId: string,
-  clientSecret: string
-): void {
-  TWITCH_CLIENT_ID = clientId;
-  TWITCH_CLIENT_SECRET = clientSecret;
-  console.error(`TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID}`);
-  console.error(`TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET}`);
-}

@@ -1,34 +1,37 @@
 import http from "http";
 import open from "open";
 import { URLSearchParams } from "url";
-import { saveTokens, getRefreshToken } from "./token-manager.js";
-import { AUTH_PORT, AUTH_SCOPES, REDIRECT_URI, TWITCH_AUTH_URL, TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, } from "../config/constants.js";
-// Generate the authorization URL with scopes
+import { saveTokens, getRefreshToken } from "./TokenManager.js";
+import { AUTH_PORT, AUTH_SCOPES, REDIRECT_URI, TWITCH_AUTH_URL, } from "../config/constants.js";
+import { getCredentials } from "../config/TwitchClient.js";
+//Generate the authorization URL with required scopes
 export function generateAuthUrl() {
-    if (!TWITCH_CLIENT_ID) {
+    const { clientId } = getCredentials();
+    if (!clientId) {
         throw new Error("TWITCH_CLIENT_ID not available. Make sure it was initialized.");
     }
-    console.error(`generateAuthUrl: TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID}`);
+    console.error(`generateAuthUrl: TWITCH_CLIENT_ID: ${clientId}`);
     const authUrl = new URL(`${TWITCH_AUTH_URL}/authorize`);
-    authUrl.searchParams.append("client_id", TWITCH_CLIENT_ID);
+    authUrl.searchParams.append("client_id", clientId);
     authUrl.searchParams.append("redirect_uri", REDIRECT_URI);
     authUrl.searchParams.append("response_type", "code");
     authUrl.searchParams.append("scope", AUTH_SCOPES.join(" "));
     console.error(`Auth URL: ${authUrl.toString()}`);
     return authUrl.toString();
 }
-// Refresh the access token
+//Refresh access token
 export async function refreshAccessToken() {
     const refreshToken = getRefreshToken();
     if (!refreshToken)
         return false;
     try {
-        if (!TWITCH_CLIENT_ID || !TWITCH_CLIENT_SECRET) {
+        const { clientId, clientSecret } = getCredentials();
+        if (!clientId || !clientSecret) {
             throw new Error("Missing client credentials (ID or secret). Make sure they were initialized.");
         }
         const params = new URLSearchParams({
-            client_id: TWITCH_CLIENT_ID,
-            client_secret: TWITCH_CLIENT_SECRET,
+            client_id: clientId,
+            client_secret: clientSecret,
             grant_type: "refresh_token",
             refresh_token: refreshToken,
         });
@@ -52,7 +55,7 @@ export async function refreshAccessToken() {
         return false;
     }
 }
-// Handle OAuth authorization flow
+//Handle OAuth authorization flow
 export async function startAuthFlow() {
     return new Promise((resolve, reject) => {
         // Create HTTP server to handle OAuth callback
@@ -66,21 +69,52 @@ export async function startAuthFlow() {
                     res.writeHead(200, { "Content-Type": "text/html" });
                     res.end(`
             <html>
+              <head>
+                <style>
+                  body {
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                    background: #f7f7f8;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                  }
+                  .container {
+                    background: white;
+                    padding: 2rem 3rem;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    text-align: center;
+                  }
+                  h1 {
+                    color: #9147ff;
+                    margin-bottom: 1rem;
+                  }
+                  p {
+                    color: #53535f;
+                    font-size: 1.1rem;
+                    line-height: 1.5;
+                  }
+                </style>
+              </head>
               <body>
-                <h1>Authentication Successful!</h1>
-                <p>You can now close this window and return to the application.</p>
-                <script>window.close();</script>
+                <div class="container">
+                  <h1>Twitch MCP Authentication Successful!</h1>
+                  <p>You have successfully authenticated with Twitch.<br>You can now close this window and return to your application.</p>
+                </div>
               </body>
             </html>
           `);
                     // Exchange code for access token
                     try {
-                        if (!TWITCH_CLIENT_ID || !TWITCH_CLIENT_SECRET) {
+                        const { clientId, clientSecret } = getCredentials();
+                        if (!clientId || !clientSecret) {
                             throw new Error("Missing client credentials (ID or secret). Make sure they were initialized.");
                         }
                         const params = new URLSearchParams({
-                            client_id: TWITCH_CLIENT_ID,
-                            client_secret: TWITCH_CLIENT_SECRET,
+                            client_id: clientId,
+                            client_secret: clientSecret,
                             code: code,
                             grant_type: "authorization_code",
                             redirect_uri: REDIRECT_URI,
@@ -140,13 +174,12 @@ export async function startAuthFlow() {
         });
     });
 }
-// Ensure we have a valid token
 export async function ensureValidToken() {
-    // If we have a valid token, return it
+    // check if we have a valid token
     if (getRefreshToken() && (await refreshAccessToken())) {
         return true;
     }
-    // Start the auth flow
+    //if we don't have a valid token, start the auth flow
     try {
         await startAuthFlow();
         return true;

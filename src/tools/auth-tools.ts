@@ -1,5 +1,5 @@
 import { ensureValidToken } from "../auth/oauth.js";
-import { getAccessToken, getTokenExpiresAt } from "../auth/token-manager.js";
+import { getAccessToken, getTokenExpiresAt } from "../auth/TokenManager.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 // Register authentication-related tools
@@ -33,9 +33,9 @@ export function registerAuthTools(server: McpServer): void {
       const accessToken = getAccessToken();
       const tokenExpiresAt = getTokenExpiresAt();
 
-      //debug
-      console.error("auth-status accessToken", accessToken);
-      console.error("auth-status tokenExpiresAt", tokenExpiresAt);
+      // //debug
+      // console.error("auth-status accessToken", accessToken);
+      // console.error("auth-status tokenExpiresAt", tokenExpiresAt);
       const isValid = accessToken && tokenExpiresAt > Date.now();
       const expiresIn = isValid
         ? Math.floor((tokenExpiresAt - Date.now()) / 1000 / 60)

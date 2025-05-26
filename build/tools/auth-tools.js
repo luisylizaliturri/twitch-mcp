@@ -1,5 +1,5 @@
 import { ensureValidToken } from "../auth/oauth.js";
-import { getAccessToken, getTokenExpiresAt } from "../auth/token-manager.js";
+import { getAccessToken, getTokenExpiresAt } from "../auth/TokenManager.js";
 // Register authentication-related tools
 export function registerAuthTools(server) {
     server.tool("authenticate", "Manually trigger Twitch authentication", {}, async () => {
@@ -19,9 +19,9 @@ export function registerAuthTools(server) {
     server.tool("auth-status", "Check authentication status with Twitch", {}, async () => {
         const accessToken = getAccessToken();
         const tokenExpiresAt = getTokenExpiresAt();
-        //debug
-        console.error("auth-status accessToken", accessToken);
-        console.error("auth-status tokenExpiresAt", tokenExpiresAt);
+        // //debug
+        // console.error("auth-status accessToken", accessToken);
+        // console.error("auth-status tokenExpiresAt", tokenExpiresAt);
         const isValid = accessToken && tokenExpiresAt > Date.now();
         const expiresIn = isValid
             ? Math.floor((tokenExpiresAt - Date.now()) / 1000 / 60)

@@ -1,8 +1,7 @@
 import { TWITCH_API_BASE } from "../config/constants.js";
 import { ensureValidToken } from "../auth/oauth.js";
-import { getAccessToken } from "../auth/token-manager.js";
-// Client credentials from command line arguments
-const clientId = process.argv[2];
+import { getAccessToken } from "../auth/TokenManager.js";
+import { getCredentials } from "../config/TwitchClient.js";
 // Helper function for making Twitch API requests
 export async function makeTwitchRequest(url, queryParams = {}, body = {}, method = "GET" /* HttpMethods.GET */) {
     // Ensure we have a valid token
@@ -10,8 +9,9 @@ export async function makeTwitchRequest(url, queryParams = {}, body = {}, method
         throw new Error("Failed to obtain a valid access token");
     }
     const accessToken = getAccessToken();
+    const { clientId } = getCredentials();
     //debug
-    console.error("makeTwitchRequest accessToken", accessToken);
+    // console.error("makeTwitchRequest accessToken", accessToken);
     try {
         const headers = {
             Authorization: `Bearer ${accessToken}`,
@@ -21,10 +21,13 @@ export async function makeTwitchRequest(url, queryParams = {}, body = {}, method
         let response;
         switch (method) {
             case "GET" /* HttpMethods.GET */:
+                console.error("GET request");
                 // Add query parameters
                 Object.entries(queryParams).forEach(([key, value]) => {
                     url.searchParams.append(key, value);
                 });
+                console.error("url", url.toString());
+                console.error("headers", headers);
                 response = await fetch(url.toString(), {
                     method: "GET",
                     headers,

@@ -2,12 +2,11 @@ import fs from "fs";
 import { TokenData } from "../types/index.js";
 import { TOKEN_FILE } from "../config/constants.js";
 
-// Token storage
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 let tokenExpiresAt: number = 0;
 
-// Try to load saved tokens
+//Check if we have saved tokens
 export function loadTokens(): boolean {
   try {
     if (fs.existsSync(TOKEN_FILE)) {
@@ -51,22 +50,18 @@ export function saveTokens(access: string, refresh: string, expiresIn: number): 
   fs.writeFileSync(TOKEN_FILE, JSON.stringify(tokenData, null, 2));
 }
 
-// Get the current access token
 export function getAccessToken(): string | null {
   return accessToken;
 }
 
-// Get the current refresh token
 export function getRefreshToken(): string | null {
   return refreshToken;
 }
 
-// Get the token expiration time
 export function getTokenExpiresAt(): number {
   return tokenExpiresAt;
 }
 
-// Check if we have a valid token
 export function hasValidToken(): boolean {
-  return !!accessToken && tokenExpiresAt > Date.now() + 60000;
+  return !!accessToken && tokenExpiresAt > Date.now() + 60000; // 1 minute buffer
 } 

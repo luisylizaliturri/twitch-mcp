@@ -5,19 +5,15 @@ import {
   TopGamesResponse,
   UpdateChannelRequest,
   SearchChannelsResponse,
-  //SendChatMessageResponse,
   TwitchPoll,
   TwitchChatMessage,
   GetPollResponse,
-  // TwitchPollResponse,
-  // CreatePollResponse,
 } from "../types/index.js";
 import { ensureValidToken } from "../auth/oauth.js";
-import { getAccessToken } from "../auth/token-manager.js";
+import { getAccessToken } from "../auth/TokenManager.js";
+import { getCredentials } from "../config/TwitchClient.js";
 
 // Client credentials from command line arguments
-const clientId = process.argv[2];
-
 const enum HttpMethods {
   GET = "GET",
   POST = "POST",
@@ -39,8 +35,9 @@ export async function makeTwitchRequest<T>(
   }
 
   const accessToken = getAccessToken();
+  const { clientId } = getCredentials();
   //debug
-  console.error("makeTwitchRequest accessToken", accessToken);
+  // console.error("makeTwitchRequest accessToken", accessToken);
 
   try {
     const headers = {
@@ -53,11 +50,13 @@ export async function makeTwitchRequest<T>(
 
     switch (method) {
       case HttpMethods.GET:
+        console.error("GET request");
         // Add query parameters
         Object.entries(queryParams).forEach(([key, value]) => {
           url.searchParams.append(key, value);
         });
-
+        console.error("url", url.toString());
+        console.error("headers", headers);
         response = await fetch(url.toString(), {
           method: "GET",
           headers,
