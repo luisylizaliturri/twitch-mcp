@@ -13,6 +13,16 @@
   "files": [
     "build"
   ],
+  "keywords": [
+    "twitch",
+    "mcp",
+    "model-context-protocol",
+    "streaming",
+    "chat-integration",
+    "ai-assistant",
+    "twitch-api",
+    "claude"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.0",
     "@types/yargs": "^17.0.33",
