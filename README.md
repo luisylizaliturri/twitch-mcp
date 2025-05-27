@@ -34,6 +34,9 @@ The configuration files can typically be found in the following locations:
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
 
 
+
+Using Github:
+
 ```json
 {
   "mcpServers": {
@@ -51,6 +54,29 @@ The configuration files can typically be found in the following locations:
   }
 }
 ```
+
+
+Using NPM package:
+
+```json
+{
+  "mcpServers": {
+      "twitch_mcp": {
+            "command": "npx",
+            "args": [
+                  "-y",
+                  "@mcp-addons/twitch-mcp@latest",
+                  "--client-id",
+                  "XXX",
+                  "--client-secret",
+                  "YYY"
+                  ]
+         }
+  }
+}
+```
+
+
 
 **Note**: Restart your MCP client application after updating the configuration.
 
