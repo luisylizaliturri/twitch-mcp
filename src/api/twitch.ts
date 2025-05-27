@@ -92,19 +92,17 @@ export async function makeTwitchRequest<T>(
         break;
     }
 
+    //debug
     console.error("response", response);
 
-    if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
-      return false as T;
+    if (response.ok) {
+      if (response.status === 204) { //No content
+        return true as T;
+      }
+      return (await response.json()) as T;
     }
 
-    if (response.status === 400) {
-      console.error("Bad Request");
-      return false as T;
-    }
-
-    return (await response.json()) as T;
+    return false as T;
   } catch (error) {
     console.error("Error making Twitch request:", error);
     return null;
@@ -199,7 +197,8 @@ export async function updateChannelInfo(
       channelInfo,
       HttpMethods.PATCH
     );
-    return result === null ? false : result;
+
+    return result !== null && result !== false;
   } catch (error) {
     console.error("Error updating channel information:", error);
     return false;
@@ -247,7 +246,7 @@ export async function sendChatMessage(
       twitchChatMessage,
       HttpMethods.POST
     );
-    return result === null ? false : result;
+    return result !== null && result !== false;
   } catch (error) {
     console.error("Error sending chat message:", error);
     return false;
@@ -265,7 +264,7 @@ export async function createPoll(twitchPoll: TwitchPoll): Promise<boolean> {
       twitchPoll,
       HttpMethods.POST
     );
-    return result === null ? false : result;
+    return result !== null && result !== false;
   } catch (error) {
     console.error("Error creating poll:", error);
     return false;
@@ -309,7 +308,7 @@ export async function endPoll(poll: {
       poll,
       HttpMethods.PATCH
     );
-    return result === null ? false : result;
+    return result !== null && result !== false;
   } catch (error) {
     console.error("Error ending poll:", error);
     return false;

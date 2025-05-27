@@ -62,16 +62,15 @@ export async function makeTwitchRequest(url, queryParams = {}, body = {}, method
                 });
                 break;
         }
+        //debug
         console.error("response", response);
-        if (!response.ok) {
-            console.error(`HTTP error! status: ${response.status}`);
-            return false;
+        if (response.ok) {
+            if (response.status === 204) { //No content
+                return true;
+            }
+            return (await response.json());
         }
-        if (response.status === 400) {
-            console.error("Bad Request");
-            return false;
-        }
-        return (await response.json());
+        return false;
     }
     catch (error) {
         console.error("Error making Twitch request:", error);
@@ -121,7 +120,7 @@ export async function updateChannelInfo(broadcasterId, channelInfo) {
     url.searchParams.append("broadcaster_id", broadcasterId);
     try {
         const result = await makeTwitchRequest(url, {}, channelInfo, "PATCH" /* HttpMethods.PATCH */);
-        return result === null ? false : result;
+        return result !== null && result !== false;
     }
     catch (error) {
         console.error("Error updating channel information:", error);
@@ -149,7 +148,7 @@ export async function sendChatMessage(twitchChatMessage) {
     const url = new URL(`${TWITCH_API_BASE}/chat/messages`);
     try {
         const result = await makeTwitchRequest(url, {}, twitchChatMessage, "POST" /* HttpMethods.POST */);
-        return result === null ? false : result;
+        return result !== null && result !== false;
     }
     catch (error) {
         console.error("Error sending chat message:", error);
@@ -161,7 +160,7 @@ export async function createPoll(twitchPoll) {
     const url = new URL(`${TWITCH_API_BASE}/polls`);
     try {
         const result = await makeTwitchRequest(url, {}, twitchPoll, "POST" /* HttpMethods.POST */);
-        return result === null ? false : result;
+        return result !== null && result !== false;
     }
     catch (error) {
         console.error("Error creating poll:", error);
@@ -183,7 +182,7 @@ export async function endPoll(poll) {
     const url = new URL(`${TWITCH_API_BASE}/polls`);
     try {
         const result = await makeTwitchRequest(url, {}, poll, "PATCH" /* HttpMethods.PATCH */);
-        return result === null ? false : result;
+        return result !== null && result !== false;
     }
     catch (error) {
         console.error("Error ending poll:", error);
