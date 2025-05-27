@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "description": "Twitch MCP Server",
   "type": "module",
+  "license": "MIT",
   "bin": {
     "mcp-server-twitch": "./build/cli.js"
   },
