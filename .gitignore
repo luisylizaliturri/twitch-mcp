@@ -1,6 +1,7 @@
-context
-node_modules
-
+build/
+context/
+node_modules/
 mcp_config_copy.json
 .env
 tokens.json
+*.tgz

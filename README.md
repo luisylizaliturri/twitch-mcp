@@ -1,4 +1,4 @@
-# Twitch MCP Integration
+# The Unofficial Twitch MCP
 
 This MCP server allows AI agents to interact with the Twitch streaming platform. Streamers and moderators can increase their productivity by using AI agents to manage their streams through text or voice commands.
 
@@ -8,6 +8,7 @@ This MCP server allows AI agents to interact with the Twitch streaming platform.
 - Poll management (for Partners/Affiliates)
 - Channel information updates
 - Real-time stream analytics
+- (more feautres are being rolled out!)
 
 ## Setup Instructions
 
@@ -23,13 +24,32 @@ This MCP server allows AI agents to interact with the Twitch streaming platform.
    - Client Secret
 
 ### 2. Configuration
-Add the following to your MCP client's configuration file (e.g. Cursor's is  ~/.cursor/mcp.json):
+Add the following to your MCP client's configuration file
+
+The configuration files can typically be found in the following locations:
+
+| Application     | Configuration Path |
+|----------------|-------------------|
+| Cursor         | `~/.cursor/mcp.json` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+
 
 ```json
-
-
-
-
+{
+  "mcpServers": {
+      "twitch_mcp": {
+            "command": "npx",
+            "args": [
+                  "-y",
+                  "github:luisylizaliturri/twitch-mcp#main",
+                  "--client-id",
+                  "XXX",
+                  "--client-secret",
+                  "YYY"
+                  ]
+         }
+  }
+}
 ```
 
 **Note**: Restart your MCP client application after updating the configuration.
@@ -62,7 +82,7 @@ Add the following to your MCP client's configuration file (e.g. Cursor's is  ~/.
 - `get-poll` - Get poll information*
 - `end-poll` - End an active poll*
 
-\* *These features require Twitch Partner or Affiliate status*
+\* *Some of these features require Twitch Partner or Affiliate status*
 
 ## Additional Resources
 - [Twitch Partner Program](https://www.twitch.tv/p/en/partners/)
